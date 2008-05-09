@@ -5,7 +5,7 @@ from os.path import dirname, join, isfile
 import re
 from StringIO import StringIO
 from django.db.models import get_models, get_apps
-from django.db import connection
+from django.db import connection, transaction
 from django.contrib.contenttypes.models import ContentType
 
 
@@ -81,8 +81,7 @@ class Command(NoArgsCommand):
                     $BODY$
                     %s
                     $BODY$
-                    LANGUAGE 'plpgsql' VOLATILE
-                    COST 100;
+                    LANGUAGE 'plpgsql' VOLATILE;
 
                     CREATE TRIGGER %s_handle
                       AFTER %s
@@ -95,19 +94,27 @@ class Command(NoArgsCommand):
 
         for model, action, table, sql in queries:
 
-            try:
-                cursor.execute("DROP TRIGGER %s_handle ON %s" % (action, table))
-            except:
-                cursor.db.connection.rollback()
+        
+            def dt():
+                try:
+                    cursor.execute("DROP TRIGGER %s_handle ON %s" % (action, table))
+                    transaction.commit()
+                except:
+                    transaction.rollback() 
 
+            transaction.commit_manually(dt)()
+        
             print '-- creating %s %s trigger %s' % (model, action, '-'*20)
 
-            try:
-                cursor.execute(sql)
-                print 'ok'
-                cursor.db.connection.commit()
-            except Exception, (e,):
-                print 'ERROR'
-                print e
-                cursor.db.connection.rollback()
-                break
+        
+            def ct():
+                try:
+                    cursor.execute(sql)
+                    print 'ok'
+                    transaction.commit()
+                except Exception, (e,):
+                    print 'ERROR'
+                    print e
+                    transaction.rollback()
+
+            transaction.commit_manually(ct)()

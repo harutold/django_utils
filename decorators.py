@@ -14,7 +14,8 @@ def render_to(template_name):
                 context = RequestContext(request, res)
                 return render_to_response(template_name, context)
             return res
-        
+
+        wrap.__name__ = func.__name__
         return wrap
     
     return decor
@@ -27,5 +28,6 @@ def json(func):
         if resp.has_key('request'):
             del resp['request']
         return HttpResponse(encode(resp))
-    
+
+    wrap.__name__ = func.__name__
     return wrap
