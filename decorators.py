@@ -15,6 +15,7 @@ def render_to(template_name):
                 return render_to_response(template_name, context)
             return res
 
+        wrap.__module__ = func.__module__
         wrap.__name__ = func.__name__
         return wrap
     
@@ -29,5 +30,7 @@ def json(func):
             del resp['request']
         return HttpResponse(encode(resp))
 
+    wrap.__module__ = func.__module__
     wrap.__name__ = func.__name__
     return wrap
+
