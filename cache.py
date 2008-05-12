@@ -42,7 +42,7 @@ def cache_get_only(models=[], auth=False):
         map(curry(connect_to_models, get_cache_name(func)), models)
         if auth:
             map(curry(connect_to_models, AUTH_VIEW_PREFIX + get_cache_name(func)), models)
-        
+
         def wrap(request, *args, **kwargs):
             if request.method == 'GET':
                 _name = get_cache_name(func, *args, **kwargs)
@@ -88,6 +88,8 @@ def connect_to_models(name, model):
     dispatcher.connect(curry(_clear_cached, name), sender=model, signal=signals.post_save, weak=False)
     dispatcher.connect(curry(_clear_cached, name), sender=model, signal=signals.post_delete, weak=False)
 
+
 def clear_cached(name, *args, **kwargs):
     _name = get_cache_name(name, *args, **kwargs)
     _clear_cached(_name)
+    _clear_cached(AUTH_VIEW_PREFIX + _name)
