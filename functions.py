@@ -8,6 +8,8 @@ from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 
+__all__ = ('clean_html', 'reverse', 'redirect', 'fallback_to')
+
 sanitizer = HTMLSanitizer(safe_attrs=HTMLSanitizer.SAFE_ATTRS|set(['style']))
 
 def clean_html(s):

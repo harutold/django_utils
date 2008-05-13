@@ -4,6 +4,8 @@ from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 
+__all__ = ('render_to', 'json', 'allow_tags')
+
 def render_to(template_name):
     
     def decor(func):
@@ -34,3 +36,6 @@ def json(func):
     wrap.__name__ = func.__name__
     return wrap
 
+def allow_tags(func):
+    func.allow_tags = True
+    return func

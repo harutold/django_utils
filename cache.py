@@ -7,9 +7,12 @@ from django.dispatch import dispatcher
 from django.db.models import signals
 from django.utils.functional import curry
 
+__all__ = ('set_cache_name', 'cache_all', 'cache_get_only', 'clear_cached')
+
 CACHE_VIEW_PREFIX = 'cv_'
 AUTH_VIEW_PREFIX = 'a_'
 CACHE_NAME = 'cache_name'
+
 
 def _clear_cached(name, *args, **kwargs):
     print 'cache cleared for %s' % name

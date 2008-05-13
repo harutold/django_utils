@@ -1,5 +1,8 @@
-from decorators import render_to, json
-from functions import clean_html, reverse, redirect, fallback_to
+# lib imports
+from cache import *
+from decorators import *
+from functions import *
+
+# native django imports
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.core.exceptions import ObjectDoesNotExist
-from cache import cache_all, cache_get_only, clear_cached, set_cache_name
