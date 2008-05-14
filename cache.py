@@ -6,8 +6,9 @@ from base64 import encodestring
 from django.dispatch import dispatcher
 from django.db.models import signals
 from django.utils.functional import curry
+from django.utils.encoding import force_unicode
 
-__all__ = ('set_cache_name', 'cache_all', 'cache_get_only', 'clear_cached')
+__all__ = ('set_cache_name', 'cache_all', 'cache_get_only', 'clear_cached', 'get_template_cache_name')
 
 CACHE_VIEW_PREFIX = 'cv_'
 AUTH_VIEW_PREFIX = 'a_'
@@ -96,3 +97,6 @@ def clear_cached(name, *args, **kwargs):
     _name = get_cache_name(name, *args, **kwargs)
     _clear_cached(_name)
     _clear_cached(AUTH_VIEW_PREFIX + _name)
+
+def get_template_cache_name(name, *args):
+    return u':'.join([name] + [force_unicode(var) for var in args])
