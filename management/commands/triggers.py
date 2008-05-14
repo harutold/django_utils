@@ -4,7 +4,7 @@ from django.core.management.base import NoArgsCommand
 from os.path import dirname, join, isfile
 import re
 from StringIO import StringIO
-from django.db.models import get_models, get_apps
+from django.db.models import get_models, get_apps, get_model
 from django.db import connection, transaction
 from django.contrib.contenttypes.models import ContentType
 
@@ -44,8 +44,6 @@ class Command(NoArgsCommand):
     
     def handle_noargs(self, **kwargs):
 
-        models = dict((x.__name__, x._meta.db_table) for x in get_models())
-        apps = (dirname(x.__file__) for x in get_apps())
         actions = {
             'create': 'INSERT',
             'save': 'UPDATE',
@@ -53,16 +51,17 @@ class Command(NoArgsCommand):
         }
 
         t_re = re.compile(r'([\w"]+)\.(\w+)\s+>>>(.+?)<<<', re.DOTALL + re.UNICODE)
-
         queries = []
-        for path in apps:
+        for _app in get_apps():
+            path = dirname(_app.__file__)
             filename = join(path, 'triggers.sql')
             if isfile(filename):
                 text = open(filename).read()
                 for model, action, code in t_re.findall(text):
                     if not model.startswith('"'):
                         try:
-                            table = models[model]
+                            _model = get_model(_app.__name__.replace('.models', ''), model.lower())
+                            table = _model._meta.db_table
                         except:
                             raise Exception('unknown model "%s"' % model)
                     else:
