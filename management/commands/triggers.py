@@ -7,7 +7,8 @@ from StringIO import StringIO
 from django.db.models import get_models, get_apps, get_model
 from django.db import connection, transaction
 from django.contrib.contenttypes.models import ContentType
-
+from django.utils.termcolors import colorize
+from django.template import Template, Context
 
 def get_model(app, model):
     try:
@@ -51,6 +52,7 @@ class Command(NoArgsCommand):
         }
 
         t_re = re.compile(r'([\w"]+)\.(\w+)\s+>>>(.+?)<<<', re.DOTALL + re.UNICODE)
+        tmpl = Template(open(join(dirname(__file__), 'create.sql')).read())
         queries = []
         for _app in get_apps():
             path = dirname(_app.__file__)
@@ -58,6 +60,8 @@ class Command(NoArgsCommand):
             if isfile(filename):
                 text = open(filename).read()
                 for model, action, code in t_re.findall(text):
+                    _model = None
+                    table = None
                     if not model.startswith('"'):
                         try:
                             _model = get_model(_app.__name__.replace('.models', ''), model.lower())
@@ -71,28 +75,26 @@ class Command(NoArgsCommand):
                         event = actions[action]
                     except KeyError:
                         raise Exception('unknown trigger type "%s"' % action)
+
+                    if _model:
+                        model_name = _model.__name__.lower()
+                    else:
+                        model_name = table
+                    
                     code = ''.join(" "*16 + x for x in StringIO(code).readlines())
-
                     code = prepare(code)
-
-                    queries.append((model, action, table, """
-                    CREATE OR REPLACE FUNCTION %s_%s_handle() RETURNS trigger AS
-                    $BODY$
-                    %s
-                    $BODY$
-                    LANGUAGE 'plpgsql' VOLATILE;
-
-                    CREATE TRIGGER %s_handle
-                      AFTER %s
-                      ON %s
-                      FOR EACH ROW
-                      EXECUTE PROCEDURE %s_%s_handle();
-                    """ % (action, table, code, action, event, table, action, table)))
+                    
+                    queries.append((_model, action, table, tmpl.render(Context({
+                        'model_name': model_name,
+                        'action': action,
+                        'table_name': table,
+                        'code': code,
+                        'event': actions[action]
+                    }))))
 
         cursor = connection.cursor()
 
         for model, action, table, sql in queries:
-
         
             def dt():
                 try:
@@ -102,18 +104,27 @@ class Command(NoArgsCommand):
                     transaction.rollback() 
 
             transaction.commit_manually(dt)()
-        
-            print '-- creating %s %s trigger %s' % (model, action, '-'*20)
 
-        
+            model_name = '"%s"' % table
+            if model:
+                model_name = '%s.%s' % (model._meta.app_label, model.__name__)
+                
+            print colorize(
+                'creating %s %s trigger' % (model_name, action),
+                fg='white',
+                opts=('bold',)
+            ),
+            
             def ct():
                 try:
                     cursor.execute(sql)
-                    print 'ok'
+                    print colorize('[OK]', fg='green', opts=('bold',))
                     transaction.commit()
                 except Exception, (e,):
-                    print 'ERROR'
-                    print e
+                    print colorize('[ERROR]', fg='red', opts=('bold', ))
+                    print '>'*50
+                    print e,
+                    print '<'*50
                     transaction.rollback()
 
             transaction.commit_manually(ct)()
