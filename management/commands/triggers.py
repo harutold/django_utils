@@ -54,6 +54,7 @@ class Command(NoArgsCommand):
         t_re = re.compile(r'([\w"]+)\.(\w+)\s+>>>(.+?)<<<', re.DOTALL + re.UNICODE)
         tmpl = Template(open(join(dirname(__file__), 'create.sql')).read())
         queries = []
+        q = {}
         for _app in get_apps():
             path = dirname(_app.__file__)
             filename = join(path, 'triggers.sql')
@@ -84,6 +85,17 @@ class Command(NoArgsCommand):
                     code = ''.join(" "*16 + x for x in StringIO(code).readlines())
                     code = prepare(code)
                     
+                    if _model not in q:
+                        q[_model] = []
+                    
+                    q[_model].append((_model, action, table, tmpl.render(Context({
+                            'model_name': model_name,
+                            'action': action,
+                            'table_name': table,
+                            'code': code,
+                            'event': actions[action]
+                    }))))
+                    
                     queries.append((_model, action, table, tmpl.render(Context({
                         'model_name': model_name,
                         'action': action,
@@ -93,38 +105,42 @@ class Command(NoArgsCommand):
                     }))))
 
         cursor = connection.cursor()
-
-        for model, action, table, sql in queries:
         
-            def dt():
-                try:
-                    cursor.execute("DROP TRIGGER %s_handle ON %s" % (action, table))
-                    transaction.commit()
-                except:
-                    transaction.rollback() 
-
-            transaction.commit_manually(dt)()
-
-            model_name = '"%s"' % table
-            if model:
-                model_name = '%s.%s' % (model._meta.app_label, model.__name__)
-                
-            print colorize(
-                'creating %s %s trigger' % (model_name, action),
-                fg='white',
-                opts=('bold',)
-            ),
+        for m in reversed(sorted(q.keys())):
+            if m:
+                print colorize('%s.%s' % (m._meta.app_label, m.__name__), opts=('bold',))
+            else:
+                print 'raw tables'
             
-            def ct():
-                try:
-                    cursor.execute(sql)
-                    print colorize('[OK]', fg='green', opts=('bold',))
-                    transaction.commit()
-                except Exception, (e,):
-                    print colorize('[ERROR]', fg='red', opts=('bold', ))
-                    print '>'*50
-                    print e,
-                    print '<'*50
-                    transaction.rollback()
+            for model, action, table, sql in q[m]:
+                def dt():
+                    try:
+                        cursor.execute("DROP TRIGGER %s_handle ON %s" % (action, table))
+                        transaction.commit()
+                    except:
+                        transaction.rollback() 
 
-            transaction.commit_manually(ct)()
+                transaction.commit_manually(dt)()
+
+                model_name = '"%s"' % table
+                if model:
+                    model_name = '%s.%s' % (model._meta.app_label, model.__name__)
+            
+                if m:
+                    print colorize('\t%s' % action, opts=('bold',)),
+                else:
+                    print colorize('\t%s %s' % (table, action), opts=('bold',)),
+        
+                def ct():
+                    try:
+                        cursor.execute(sql)
+                        print colorize('[OK]', fg='green', opts=('bold',))
+                        transaction.commit()
+                    except Exception, (e,):
+                        print colorize('[ERROR]', fg='red', opts=('bold', ))
+                        print '>'*50
+                        print e,
+                        print '<'*50
+                        transaction.rollback()
+
+                transaction.commit_manually(ct)()
