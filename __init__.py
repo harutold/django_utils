@@ -7,3 +7,4 @@ from email_auth_backend import *
 # native django imports
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.decorators import login_required
