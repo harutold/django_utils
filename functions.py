@@ -8,7 +8,7 @@ from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 
-__all__ = ('clean_html', 'reverse', 'redirect', 'fallback_to')
+__all__ = ('clean_html', 'reverse', 'redirect', 'fallback_to', 'capitalize')
 
 sanitizer = HTMLSanitizer(safe_attrs=HTMLSanitizer.SAFE_ATTRS|set(['style']))
 
@@ -31,3 +31,9 @@ def fallback_to(template_name, res={}):
     from django_fields import get_request
     context = RequestContext(get_request(), res)
     return render_to_response(template_name, context)
+
+def capitalize(s):
+    if not s or type(s) not in (str, unicode):
+        return s
+    s = s.strip()
+    return s[0].upper() + s[1:]
