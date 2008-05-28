@@ -1,6 +1,6 @@
 CREATE OR REPLACE FUNCTION {{ model_name }}_{{ action }}_handle() RETURNS trigger AS
 $BODY$
-{{ code }}
+{{ code|safe }}
 $BODY$
 LANGUAGE 'plpgsql' VOLATILE;
 

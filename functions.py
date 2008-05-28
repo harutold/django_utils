@@ -20,6 +20,8 @@ def clean_html(s):
     return c
 
 def reverse(view_name, urlconf=None, *args, **kwargs):
+    if type(view_name) is str and not urlconf and '.' not in view_name:
+        urlconf = 'urls'
     return reverse_url(view_name, urlconf=urlconf, args=args, kwargs=kwargs)
 
 def redirect(*args, **kwargs):
