@@ -8,7 +8,7 @@ from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 
-__all__ = ('clean_html', 'reverse', 'redirect', 'fallback_to', 'capitalize')
+__all__ = ('clean_html', 'reverse', 'redirect', 'fallback_to', 'capitalize', 'notify')
 
 sanitizer = HTMLSanitizer(safe_attrs=HTMLSanitizer.SAFE_ATTRS|set(['style']))
 
@@ -37,3 +37,8 @@ def capitalize(s):
         return s
     s = s.strip()
     return s[0].upper() + s[1:]
+
+def notify(user, message):
+    from django.contrib.auth.models import Message
+    user.message_set.create(message=message)
+    
