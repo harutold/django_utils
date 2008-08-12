@@ -33,7 +33,7 @@ def json(func):
         else:
             request.JSON = {}
         resp = func(request, *args, **kwargs)
-        if resp.has_key('request'):
+        if type(resp) is dict and 'request' in resp:
             del resp['request']
         return HttpResponse(dumps(resp), mimetype='application/json')
 

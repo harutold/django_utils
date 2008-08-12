@@ -8,7 +8,7 @@ from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 
-__all__ = ('clean_html', 'reverse', 'redirect', 'fallback_to', 'capitalize', 'notify')
+__all__ = ('clean_html', 'reverse', 'redirect', 'fallback_to', 'capitalize', 'notify', 'flatatt')
 
 sanitizer = HTMLSanitizer(safe_attrs=HTMLSanitizer.SAFE_ATTRS|set(['style']))
 
@@ -42,3 +42,6 @@ def notify(user, message):
     from django.contrib.auth.models import Message
     user.message_set.create(message=message)
     
+def flatatt(attrs):
+    #Вместо from django.forms.util import flatatt
+    return u''.join([u' %s="%s"' % (k, escape(v)) for k, v in attrs.items()])
