@@ -44,4 +44,5 @@ def notify(user, message):
     
 def flatatt(attrs):
     #Вместо from django.forms.util import flatatt
+    from django.utils.html import escape
     return u''.join([u' %s="%s"' % (k, escape(v)) for k, v in attrs.items()])
