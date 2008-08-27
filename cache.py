@@ -89,8 +89,8 @@ def cache_all(models=[], auth=False):
 
 
 def connect_to_models(name, model):
-    dispatcher.connect(curry(_clear_cached, name), sender=model, signal=signals.post_save, weak=False)
-    dispatcher.connect(curry(_clear_cached, name), sender=model, signal=signals.post_delete, weak=False)
+    signals.post_save.connect(curry(_clear_cached, name), sender=model, weak=False)
+    signals.post_delete.connect(curry(_clear_cached, name), sender=model, weak=False)
 
 
 def clear_cached(name, *args, **kwargs):
