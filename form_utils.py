@@ -45,12 +45,7 @@ class WYSIWYGForm(forms.ModelForm):
         js = (
             "js/tiny_mce/tiny_mce_src.js",
             "admin/js/textareas.js",
-            #''.join((MEDIA_URL,"js/mootols-beta12b_full_packed.js")),
-            #''.join((MEDIA_URL, "js/validators.js")),
         )
-        css = { 
-            #'all': (''.join((MEDIA_URL,"css/tinypatch.css")),) 
-        } 
 
 class AdminWYSIWYG(admin.ModelAdmin):
     form = WYSIWYGForm
