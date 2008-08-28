@@ -51,7 +51,7 @@ def flatatt(attrs):
 
 def filesize_generic(fieldname):
     def filesize(self):
-        fsize = getattr(self, "get_%s_size" % fieldname)()
+        fsize = getattr(self, fieldname).size
         
         if fsize < 1024:
             return str(fsize) + ' ' + 'bytes'
