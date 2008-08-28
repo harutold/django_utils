@@ -8,7 +8,7 @@ from django.db.models import signals
 from django.utils.functional import curry
 from django.utils.encoding import force_unicode
 
-__all__ = ('set_cache_name', 'cache_all', 'cache_get_only', 'clear_cached', 'get_template_cache_name')
+__all__ = ('set_cache_name', 'cache_all', 'cache_get_only', 'clear_cached', 'get_template_cache_name', 'connect_to_models')
 
 CACHE_VIEW_PREFIX = 'cv_'
 AUTH_VIEW_PREFIX = 'a_'
