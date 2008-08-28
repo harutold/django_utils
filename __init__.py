@@ -5,6 +5,7 @@ from functions import *
 from email_auth_backend import *
 from form_utils import *
 import middleware ## !!!! <--captcha!!!
+import templatetags
 from filterspecs import EmptyStringFilterSpec
 
 # native django imports
