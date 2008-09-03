@@ -24,6 +24,11 @@ def render_to(template_name):
     
     return decor
 
+def _is_subclass(t1, t2):
+    for b in getattr(t1, '__bases__', ()):
+        if b is t2 or _is_subclass(b, t2):
+            return 1
+    return 0
 
 def json(func):
     
@@ -33,9 +38,12 @@ def json(func):
         else:
             request.JSON = {}
         resp = func(request, *args, **kwargs)
+        if issubclass(resp.__class__, HttpResponse):
+            return resp
         if type(resp) is dict and 'request' in resp:
             del resp['request']
         return HttpResponse(dumps(resp), mimetype='application/json')
+            
 
     wrap.__module__ = func.__module__
     wrap.__name__ = func.__name__
