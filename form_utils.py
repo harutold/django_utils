@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from django import forms
-from settings import MEDIA_URL
-#from django.conf import CUSTOM_ADMIN_MEDIA
+from django.conf import settings
 from django.contrib import admin
+from django.forms import DateField
 
 class SFieldSet:
     def __init__(self, field_sets):
@@ -40,7 +40,16 @@ def humanize(inp_str):
     s = re.compile('<\/?label[^>].*?>', re.DOTALL).sub('', s)
     return s
 
-class WYSIWYGForm(forms.ModelForm): 
+DATE_INPUT_FORMATS = getattr(settings, "WYSIWYG_DATE_INPUT_FORMATS", None)
+
+class WYSIWYGForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(WYSIWYGForm, self).__init__(*args, **kwargs)
+        
+        if DATE_INPUT_FORMATS:
+            map(lambda x: x.__setattr__('input_formats', DATE_INPUT_FORMATS), \
+                filter(lambda y: y.__class__ == DateField, self.fields.values()))
+    
     class Media: 
         js = (
             "js/tiny_mce/tiny_mce_src.js",
