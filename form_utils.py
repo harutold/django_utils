@@ -3,6 +3,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.forms import DateField
+from django_forms import RemovableFileFormWidget
 
 __all__ = ('SFieldSet', 'humanize', 'WYSIWYGForm', 'AdminWYSIWYG')
 
@@ -42,7 +43,9 @@ def humanize(inp_str):
     s = re.compile('<\/?label[^>].*?>', re.DOTALL).sub('', s)
     return s
 
+
 DATE_INPUT_FORMATS = getattr(settings, "WYSIWYG_DATE_INPUT_FORMATS", None)
+DELETE_FILES = getattr(settings, "WYSIWYG_DELETE_FILES", False)
 
 class WYSIWYGForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -51,6 +54,13 @@ class WYSIWYGForm(forms.ModelForm):
         if DATE_INPUT_FORMATS:
             map(lambda x: x.__setattr__('input_formats', DATE_INPUT_FORMATS), \
                 filter(lambda y: y.__class__ == DateField, self.fields.values()))
+        if DELETE_FILES:
+            for key, f in self.fields.items():
+                if issubclass(f.__class__, forms.FileField) and not f.required:
+                    self.fields[key] = RemovableFileFormField(required = False, inst=self.instance, key=key)
+                    self.fields[key].label = f.label
+                    self.fields[key].help_text = f.help_text
+
     
     class Media: 
         js = (
