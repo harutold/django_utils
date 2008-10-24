@@ -4,6 +4,8 @@ from django.conf import settings
 from django.contrib import admin
 from django.forms import DateField
 
+__all__ = ('SFieldSet', 'humanize', 'WYSIWYGForm', 'AdminWYSIWYG')
+
 class SFieldSet:
     def __init__(self, field_sets):
         self.sets = field_sets + ((u'invalid', '--------'))
@@ -52,7 +54,7 @@ class WYSIWYGForm(forms.ModelForm):
     
     class Media: 
         js = (
-            "js/tiny_mce/tiny_mce_src.js",
+            "js/tiny_mce/tiny_mce.js",
             "admin/js/textareas.js",
         )
 
