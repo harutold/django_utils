@@ -1,3 +1,6 @@
+
+# -*- coding: utf-8 -*-
+
 # Orignal version taken from http://www.djangosnippets.org/snippets/186/
 # Original author: udfalkso
 # Modified by: Shwagroo Team
@@ -10,6 +13,7 @@ import tempfile
 import StringIO
 
 from django.conf import settings
+from django.db import connection
 
 __all__ = ('ProfileMiddleware', )
 
@@ -34,12 +38,13 @@ class ProfileMiddleware(object):
     WARNING: It uses hotshot profiler which is not thread safe.
     """
     def process_request(self, request):
-        if (settings.DEBUG or request.user.is_superuser) and request.has_key('prof'):
+        if (settings.DEBUG or request.user.is_superuser) and request.REQUEST.get('prof', None) is not None:
             self.tmpfile = tempfile.mktemp()
             self.prof = hotshot.Profile(self.tmpfile)
+            self.q_before = self.mysql_stat()
 
     def process_view(self, request, callback, callback_args, callback_kwargs):
-        if (settings.DEBUG or request.user.is_superuser) and request.has_key('prof'):
+        if (settings.DEBUG or request.user.is_superuser) and request.REQUEST.get('prof', None) is not None:
             return self.prof.runcall(callback, request, *callback_args, **callback_kwargs)
 
     def get_group(self, file):
@@ -89,7 +94,7 @@ class ProfileMiddleware(object):
                "</pre>"
 
     def process_response(self, request, response):
-        if (settings.DEBUG or request.user.is_superuser) and request.has_key('prof'):
+        if (settings.DEBUG or request.user.is_superuser) and request.REQUEST.get('prof', None) is not None:
             self.prof.close()
 
             out = StringIO.StringIO()
@@ -103,13 +108,26 @@ class ProfileMiddleware(object):
             sys.stdout = old_stdout
             stats_str = out.getvalue()
 
+            self.q_all = self.mysql_stat() - self.q_before - 1
+
             if response and response.content and stats_str:
                 response.content = "<pre>" + stats_str + "</pre>"
 
             response.content = "\n".join(response.content.split("\n")[:40])
 
             response.content += self.summary_for_files(stats_str)
+            if self.q_all > -1:
+                response.content += u"<pre>-----MySQL stats-----\n\nКоличество запросов к базе: %s \n\n</pre>"%self.q_all
 
             os.unlink(self.tmpfile)
 
         return response
+
+    def mysql_stat(self):
+        if settings.DATABASE_ENGINE == 'mysql':
+            cursor = connection.cursor()
+            cursor.execute("show status where Variable_name='Questions'")
+            return int(cursor.fetchone()[1])
+        return 0
+    
+#show status where Variable_name="Questions";
