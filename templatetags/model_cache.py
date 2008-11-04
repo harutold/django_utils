@@ -44,17 +44,18 @@ class CacheNode(Node):
         cache_key = u':'.join([self.fragment_name] + [urlquote(resolve_variable(var, context)) for var in self.vary_on])
         value = cache.get(cache_key)
         if value is None:
-            print "\n\n\nNOT FROM CACHE"
-            models = resolve_variable(self.models_name, context)
-            if models:
-                caches.add_cache(models, cache_key)
+    #        print "\n\n\nNOT FROM CACHE"
+            if self.models_name is not None:
+                models = resolve_variable(self.models_name, context)
+                if models:
+                    caches.add_cache(models, cache_key)
             value = self.nodelist.render(context)
             if expire_time:
                 cache.set(cache_key, value, expire_time)
             else:
                 cache.set(cache_key, value)
-        else:
-            print "\n\n\n   FROM CACHE"
+    #    else:
+    #        print "\n\n\n   FROM CACHE"
         return value
 
 def do_cache(parser, token):
@@ -65,14 +66,14 @@ def do_cache(parser, token):
     Usage::
 
         {% load cache %}
-        {% cache [expire_time] [fragment_name] %}
+        {% modelcache [expire_time] [fragment_name] [models] %}
             .. some expensive processing ..
         {% endcache %}
 
     This tag also supports varying by a list of arguments::
 
         {% load cache %}
-        {% cache [expire_time] [fragment_name] [var1] [var2] .. %}
+        {% modelcache [expire_time] [fragment_name] [models] [var1] [var2] .. %}
             .. some expensive processing ..
         {% endcache %}
 
@@ -83,6 +84,10 @@ def do_cache(parser, token):
     tokens = token.contents.split()
     if len(tokens) < 3:
         raise TemplateSyntaxError(u"'%r' tag requires at least 2 arguments." % tokens[0])
-    return CacheNode(nodelist, tokens[1], tokens[2], tokens[3], tokens[4:])
+    if len(tokens) == 3 or tokens[3] == u'[]':
+        models = None
+    else:
+        models = tokens[3]
+    return CacheNode(nodelist, tokens[1], tokens[2], models, tokens[4:])
 
 register.tag('modelcache', do_cache)
