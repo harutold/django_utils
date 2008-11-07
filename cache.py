@@ -8,21 +8,60 @@ from django.db.models import signals
 from django.utils.functional import curry
 from django.utils.encoding import force_unicode
 
-__all__ = ('set_cache_name', 'cache_all', 'cache_get_only', 'clear_cached', 'get_template_cache_name', 'connect_to_models')
+__all__ = ('set_cache_name', 'cache_all', 'cache_get_only', 'clear_cached', 'get_template_cache_name', 'view_set_cache')
 
 CACHE_VIEW_PREFIX = 'cv_'
 AUTH_VIEW_PREFIX = 'a_'
 CACHE_NAME = 'cache_name'
 
+class RegisteredCaches(object):
+    def __init__(self):
+        self.caches = []
+    
+    def add_cache(self, models, name):
+        if not (name in self.caches):
+            map(curry(connect_to_models, name), models)
+            self.caches.append(name)    
+
+caches = RegisteredCaches()
+
+def view_set_cache(cache_key, expire_time=None, models=None, cache_func=lambda: None):
+    value = cache.get(cache_key)
+    if value is None:
+        if models is not None:
+            caches.add_cache(models, cache_key)
+        value = cache_func()
+        if expire_time:
+            cache.set(cache_key, value, expire_time)
+        else:
+            cache.set(cache_key, value)
+#        print "cache setted: %s" % cache_key
+    return value
 
 def _clear_cached(name, *args, **kwargs):
-    print 'cache cleared for %s' % name
     cache.delete(name)
 
 def _cache(name, value):
     cache.set(name, value)
     print 'cache set for %s' % name
     return value
+
+
+def connect_to_models(name, model):
+#    print "cache connected: %s" % name
+    signals.post_save.connect(curry(_clear_cached, name), sender=model, weak=False)
+    signals.post_delete.connect(curry(_clear_cached, name), sender=model, weak=False)
+
+
+def clear_cached(name, *args, **kwargs):
+    _name = get_cache_name(name, *args, **kwargs)
+    print 'cache cleared for %s' % name
+    cache.delete(_name)
+#    _clear_cached(AUTH_VIEW_PREFIX + _name) #в декораторах к модели присобачиваются оба имени
+
+
+##---------------------
+## CACHE decor
 
 def get_cache_name(name, *args, **kwargs):
     if type(name) is not str:
@@ -87,16 +126,6 @@ def cache_all(models=[], auth=False):
     
     return decor
 
-
-def connect_to_models(name, model):
-    signals.post_save.connect(curry(_clear_cached, name), sender=model, weak=False)
-    signals.post_delete.connect(curry(_clear_cached, name), sender=model, weak=False)
-
-
-def clear_cached(name, *args, **kwargs):
-    _name = get_cache_name(name, *args, **kwargs)
-    _clear_cached(_name)
-    _clear_cached(AUTH_VIEW_PREFIX + _name)
-
+#???????
 def get_template_cache_name(name, *args):
     return u':'.join([name] + [force_unicode(var) for var in args])
