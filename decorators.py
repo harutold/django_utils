@@ -4,7 +4,6 @@ from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from django.utils.simplejson import dumps, loads
-import StringIO
 import csv
 
 __all__ = ('render_to', 'json', 'allow_tags',  'csv_decor')
@@ -54,30 +53,23 @@ def json(func):
 def allow_tags(func):
     func.allow_tags = True
     return func
-    
-    
-    
-    
-    
+
 def csv_decor(filename,  delimiter=";"):
     def decor(func):
     
         def wrap(request, *args, **kwargs):
-
             resp = func(request, *args, **kwargs)
             if issubclass(resp.__class__, HttpResponse):
                 return resp
-            str = StringIO.StringIO()
+            h = HttpResponse(mimetype="text/csv") 
+            h['Content-Disposition'] = 'attacment; filename="%s"'%filename   
+
             dial = csv.excel()
             dial.delimiter = delimiter
-            csv_writer = csv.writer(str, dialect=dial)
             
+            csv_writer = csv.writer(h, dialect=dial)
             csv_writer.writerows(resp)
-            h = HttpResponse(str.getvalue(), mimetype="text/csv") 
-            h['Content-Disposition'] = 'attacment; filename="%s"'%filename   
-                
             return h
-                
 
         wrap.__module__ = func.__module__
         wrap.__name__ = func.__name__
