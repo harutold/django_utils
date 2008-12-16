@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
+__all__ = ('SFieldSet', 'humanize', 'WYSIWYGForm', 'AdminWYSIWYG')
+
 from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.forms import DateField
-from django_fields import RemovableFileFormField
-
-__all__ = ('SFieldSet', 'humanize', 'WYSIWYGForm', 'AdminWYSIWYG')
 
 class SFieldSet:
     def __init__(self, field_sets):
@@ -49,6 +48,7 @@ DELETE_FILES = getattr(settings, "WYSIWYG_DELETE_FILES", False)
 
 class WYSIWYGForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
+        from django_fields import RemovableFileFormField
         super(WYSIWYGForm, self).__init__(*args, **kwargs)
         
         if DATE_INPUT_FORMATS:
