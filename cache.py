@@ -43,7 +43,7 @@ def _clear_cached(name, *args, **kwargs):
 
 def _cache(name, value):
     cache.set(name, value)
-    print 'cache set for %s' % name
+    #print 'cache set for %s' % name
     return value
 
 
@@ -55,7 +55,7 @@ def connect_to_models(name, model):
 
 def clear_cached(name, *args, **kwargs):
     _name = get_cache_name(name, *args, **kwargs)
-    print 'cache cleared for %s' % name
+    #print 'cache cleared for %s' % name
     cache.delete(_name)
 #    _clear_cached(AUTH_VIEW_PREFIX + _name) #в декораторах к модели присобачиваются оба имени
 
