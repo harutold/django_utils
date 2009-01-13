@@ -3,6 +3,7 @@
 
 from django import template
 from django.utils.encoding import force_unicode
+import re
 
 register = template.Library()
 
@@ -27,8 +28,10 @@ def truncatesmart(value, limit=20):
     """
     Основано на http://www.djangosnippets.org/snippets/1259/
     
-    Обрезает строку на заданном колличестве симовлов, выбирает все необрезаные слова и добавляет троеточие.
-    Результат будет в разных ситуациях иметь разную длинну но не более limit+3. 
+    Обрезает строку на заданном количестве симовлов, выбирает все необрезаные слова и добавляет троеточие.
+    Результат будет в разных ситуациях иметь разную длинну но не более limit+3.
+    
+    Если первое слово длиннее, чем limit, возвращает truncatechars
     
     Пример использования:
         {{ string|truncatesmart }}
@@ -39,15 +42,21 @@ def truncatesmart(value, limit=20):
         limit = int(limit)
     except ValueError:
         return value
-    newvalue = force_unicode(value)
+    newvalue = force_unicode(value).replace('\n', ' ')
+    truncated = ' ' not in (newvalue[limit-1:limit])
+    
     if len(newvalue) <= limit:
         return newvalue
     newvalue = newvalue[:limit]
+    
     words = newvalue.split()
-    if u' '.join(value.split()[:len(words)-1]) != newvalue:
+    if truncated:
         #Если последнее слово частично обрезано
         words = words[:-1]
-    return u' '.join(words) + u'...'
+    if not words:
+        return truncatechars(value, limit=limit)
+    else:
+        return u' '.join(words) + u'...'
     
 register.filter('truncatesmart', truncatesmart)
 register.filter('truncatechars', truncatechars)
