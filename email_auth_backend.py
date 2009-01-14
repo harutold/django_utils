@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from django.contrib.auth.models import User
+from django.contrib.auth.backends import ModelBackend
 
 __all__ = ('EmailBackend', )
 
-class EmailBackend(object):
+class EmailBackend(ModelBackend):
 
     def authenticate(self, username=None, password=None):
         try:
