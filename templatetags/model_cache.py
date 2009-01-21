@@ -14,7 +14,12 @@ register = Library()
 class CacheNode(Node):
     def __init__(self, nodelist, expire_time_var, fragment_name, models, vary_on):
         self.nodelist = nodelist
-        self.models_name = models
+        if models == u'[]':
+            self.models_name = []
+        elif ',' in models:
+            self.models_name = models.split(",")
+        else:
+            self.models_name = models
         self.expire_time_var = Variable(expire_time_var)
         self.fragment_name = fragment_name
         self.vary_on = vary_on
@@ -30,8 +35,8 @@ class CacheNode(Node):
             raise TemplateSyntaxError('"cache" tag got a non-integer timeout value: %r' % expire_time)
         # Build a unicode key for this fragment and all vary-on's.
         cache_key = u':'.join([self.fragment_name] + [urlquote(resolve_variable(var, context)) for var in self.vary_on])
-        if self.models_name == u'[]':
-            models = []
+        if type(self.models_name) is list:
+            models = [resolve_variable(x, context) for x in self.models_name if x]
         else:
             models = resolve_variable(self.models_name, context)
 
@@ -47,19 +52,10 @@ def do_cache(parser, token):
 
     Usage::
 
-        {% load cache %}
-        {% cache [expire_time] [fragment_name] %}
+        {% load model_cache %}
+        {% modelcache expire_time cashe_name (model_list|instance,[instance[,instance...]]|[]) [var1]  [var2] ... %}
             .. some expensive processing ..
-        {% endcache %}
-
-    This tag also supports varying by a list of arguments::
-
-        {% load cache %}
-        {% cache [expire_time] [fragment_name] [var1] [var2] .. %}
-            .. some expensive processing ..
-        {% endcache %}
-
-    Each unique set of arguments will result in a unique cache entry.
+        {% endmodelcache %}
     """
     nodelist = parser.parse(('endmodelcache',))
     parser.delete_first_token()

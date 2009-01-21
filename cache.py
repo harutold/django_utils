@@ -4,7 +4,7 @@ from pickle import dumps
 from django.core.cache import cache
 from base64 import encodestring
 from django.dispatch import dispatcher
-from django.db.models import signals
+from django.db.models import signals, Model
 from django.utils.functional import curry
 from django.utils.encoding import force_unicode
 
@@ -19,6 +19,7 @@ class RegisteredCaches(object):
         self.caches = []
     
     def add_cache(self, models, name):
+        #print "cache connected: %s" % name
         if not (name in self.caches):
             map(curry(connect_to_models, name), models)
             self.caches.append(name)    
@@ -35,11 +36,14 @@ def view_set_cache(cache_key, expire_time=None, models=None, cache_func=lambda: 
             cache.set(cache_key, value, expire_time)
         else:
             cache.set(cache_key, value)
-#        print "cache setted: %s" % cache_key
+        #print "cache set: %s" % cache_key
     return value
 
 def _clear_cached(name, *args, **kwargs):
-    cache.delete(name)
+    pk = kwargs.pop('pk', None)
+    if pk is None or kwargs['instance'].pk == pk:
+        #print 'cache cleared for %s' % name
+        cache.delete(name)
 
 def _cache(name, value):
     cache.set(name, value)
@@ -47,15 +51,23 @@ def _cache(name, value):
     return value
 
 
-def connect_to_models(name, model):
-#    print "cache connected: %s" % name
-    signals.post_save.connect(curry(_clear_cached, name), sender=model, weak=False)
-    signals.post_delete.connect(curry(_clear_cached, name), sender=model, weak=False)
-
+def connect_to_models(name, model_or_object):
+#    print model, type(model)
+    if isinstance(model_or_object, Model):
+        pk = model_or_object.pk
+        model = model_or_object.__class__
+    else:
+        pk = None
+        model = model_or_object
+    
+    signals.post_save.connect(curry(_clear_cached, name, pk=pk), sender=model, weak=False)
+    signals.pre_delete.connect(curry(_clear_cached, name, pk=pk), sender=model, weak=False)
+    
 
 def clear_cached(name, *args, **kwargs):
+    
     _name = get_cache_name(name, *args, **kwargs)
-    #print 'cache cleared for %s' % name
+#    print 'cache cleared for %s' % name
     cache.delete(_name)
 #    _clear_cached(AUTH_VIEW_PREFIX + _name) #в декораторах к модели присобачиваются оба имени
 
