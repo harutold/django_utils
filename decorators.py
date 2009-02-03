@@ -49,14 +49,17 @@ def allow_tags(func):
     func.allow_tags = True
     return func
 
-def csv_decor(filename,  delimiter=";"):
+def csv_decor(filename,  delimiter=";", encoding=None):
     def decor(func):
         def wrap(request, *args, **kwargs):
             resp = func(request, *args, **kwargs)
             if issubclass(resp.__class__, HttpResponse):
                 return resp
             h = HttpResponse(mimetype="text/csv") 
-            h['Content-Disposition'] = 'attacment; filename="%s"'%filename   
+            h['Content-Disposition'] = 'attacment; filename="%s"'%filename
+            
+            if encoding is not None:
+                resp = [tuple([c.encode(encoding) for c in row]) for row in resp]
 
             dial = csv.excel()
             dial.delimiter = delimiter
