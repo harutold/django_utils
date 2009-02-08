@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-from django.core.management.base import BaseCommand, CommandError
-from django.core import serializers
-
 from optparse import make_option
+
+from django.core import serializers
+from django.core.management.base import BaseCommand, CommandError
+from django.db.models import get_app, get_apps, get_models, get_model
+from django.db.models.fields.related import RelatedField
 
 def intuplelist0(tuplelist,el):
     for tuple in tuplelist:
@@ -35,8 +37,6 @@ class Command(BaseCommand):
     args = '[appname ...]'
 
     def handle(self, *app_labels, **options):
-        from django.db.models import get_app, get_apps, get_models, get_model
-
         format = options.get('format','json')
         indent = options.get('indent',None)
         exclude = options.get('exclude',[])
@@ -46,7 +46,10 @@ class Command(BaseCommand):
         extrasort = options.get('traceback', False)
         
         excluded_apps = [get_app(app_label) for app_label in exclude]
-        excluded_models = [(get_app(app_label.split('.')[0]),get_model(app_label.split('.')[0],app_label.split('.')[1])) for app_label in exclude_models]
+        excluded_models = [(get_app(app_label.split('.')[0]),
+                            get_model(app_label.split('.')[0],
+                                      app_label.split('.')[1])
+                            ) for app_label in exclude_models]
 
         if len(app_labels) == 0:
             app_list = [app for app in get_apps() if app not in excluded_apps]
@@ -67,7 +70,8 @@ class Command(BaseCommand):
         models=[]
         for app in app_list:
             for model in get_models(app):
-                if intuplelist0(excluded_models, app) and intuplelist1(excluded_models, model):
+                if intuplelist0(excluded_models, app) and\
+                intuplelist1(excluded_models, model):
                     pass
                 else:
                     models.append(model)
@@ -90,26 +94,33 @@ class Command(BaseCommand):
 
 
 def sort_by_relation(models):
-    '''
-     Сортирует список моделей так, что те, на кого ссылаются идут раньше, чем те, которые ссылаются
-     (в общем при прохождении списка, когда встечается связь(RelatedField)
-       то о модели, на которую ссылаются уже известно)
-     Для решения проблем с петлями (A(x->B); B(x->A); или A(x->B); B(x->C); C(x->A) и т.п. ))
-      после извлечения всех элементов, не участвующих в петлях, удаляем все необязательные
-      связи и опять извлекаем. (Можно было бы сразу пренебречь необязательными связями,
-      но в данной функции, если связи есть то стараемся их учитывать до последнего)
+    u'''
+     Сортирует список моделей так, что те, на кого ссылаются идут раньше,
+       чем те, которые ссылаются (в общем при прохождении списка, когда
+       встечается связь(RelatedField) то о модели, на которую
+       ссылаются уже известно)
+     Для решения проблем с петлями
+      (A(x->B); B(x->A); или A(x->B); B(x->C); C(x->A) и т.п. ))
+      после извлечения всех элементов, не участвующих в петлях,
+      удаляем все необязательные связи и опять извлекаем.
+      (Можно было бы сразу пренебречь необязательными связями,
+      но в данной функции, если связи есть то стараемся их учитывать
+      до последнего)
      
      TODO: Если ссылки на себя - проблема НЕ РЕШЕНА (пока прото игнорируется).
      TODO: протестиь это функционал нормально
      
      Идея взята из http://www.djangosnippets.org/snippets/533/
+     
     '''
+    
     def related_field(field_class):
-        '''
+        u'''
          Возвращает True если класс наследуется от RelatedField
          field_class - поле класса
         '''
-        from django.db.models.fields.related import RelatedField
+        
+        
         if field_class == RelatedField:
             return True
         try:
@@ -123,10 +134,12 @@ def sort_by_relation(models):
         return False
     
     def get_related(model):
-        '''
-         Возвращает список связанных моделей (на которые ссылается данная модель)
+        u'''
+         Возвращает список связанных моделей
+         (на которые ссылается данная модель)
          В том числе и связи ManyToMany
         '''
+        
         res = []
         for field in model._meta.fields:
             if related_field(field.__class__):
@@ -137,13 +150,14 @@ def sort_by_relation(models):
         u'''
          Удаляет нулевые связи
         '''
+        
         for (node,nodeinfo) in graph.items():# по всем узлам
             for x in xrange(len(nodeinfo[1])):# по всем связям
                 (who_poin_on_me,reqired) = nodeinfo[1][x]
                 if not reqired:# если не обязатедьная связь
-                    if graph[who_poin_on_me][0]>0: # Вдруг где ошибся
+                    if graph[who_poin_on_me][0]>0:
                         graph[who_poin_on_me][0] -= 1
-                    else:
+                    else: # Вдруг где ошибся
                         raise Exception
                     del(graph[model][1][x])
         
@@ -153,6 +167,7 @@ def sort_by_relation(models):
         u'''
         Сортируется всё, что получится (петли пропускаются)
         '''
+        
         sorted = []
         while len(roots) != 0:
             root = roots.pop()
@@ -163,10 +178,13 @@ def sort_by_relation(models):
                     roots.append(child[0])
             del graph[root]
         return (sorted,graph)
-
-    graph={}#  { Модель: [На скольких ссылается,[ (Кто ссылается на,Обязательная связь(True,False)), ....]]}
+    
+    # {Модель: [На скольких ссылается,[ (Кто ссылается на,Обязательная связь(True,False)), ....]]}
+    graph={}
+    
     rel_to_fields=[]
-    rel_to_self = [] #модели, где есть поле rel_to = self. Формат: [(Модель,Поле),...]
+    # Модели, где есть поле rel_to = self. Формат: [(Модель,Поле),...]
+    rel_to_self = []
     
     #Список моделей
     for model in models:
@@ -175,22 +193,19 @@ def sort_by_relation(models):
     #Считаем связи
     for model in models:
         rel_to_fields = (get_related(model))
+        # Отсечем связи на не включенные в дамп модели, связи самого на себя
+        # а также повторные связи (A(), B(x->A,y->A))
         for field in rel_to_fields:
-            # Отсечем связи на не включенные в дамп модели, связи самого на себя
-            # а также повторные связи (A(), B(x->A,y->A))
-            if graph.has_key(field.rel.to) and (field.rel.to != model) and not intuplelist0(graph[field.rel.to][1],model):
-                graph[field.rel.to][1].append((model,not field.null))
+            if graph.has_key(field.rel.to) and (field.rel.to != model) and\
+               not intuplelist0(graph[field.rel.to][1],model):
+                graph[field.rel.to][1].append((model, not field.null))
                 graph[model][0] += 1
             elif (field.rel.to != model):# rel_to = self
-                rel_to_self.append((model,field))
-
-    roots = [node for (node,nodeinfo) in graph.items() if nodeinfo[0] == 0]
+                rel_to_self.append((model, field))
+    
+    roots = [node for (node, nodeinfo) in graph.items() if nodeinfo[0] == 0]
     
     sorted,graph = sort_possible(graph) #sorted - Результат
-    #print models
-    print '\n\n'
-    print 'len(sorted)=',len(sorted),'  len(models)=',len(models)
-    #print sorted
     for x in xrange(len(models)):
         y = models[x]
         models[x] = None
@@ -198,7 +213,7 @@ def sort_by_relation(models):
             print 'NOT IN',y
         if y in models:
             print 'DOUBLE',y
-    raise
+
     # Если остались петли
     if len(graph.items()):
         try:
@@ -213,4 +228,4 @@ def sort_by_relation(models):
                 sorted.append(node)
                 print node,' ',
     
-    return sorted #,rel_to_self
+    return sorted #, rel_to_self
