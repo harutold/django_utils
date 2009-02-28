@@ -5,6 +5,6 @@ register = Library()
 
 @register.filter_function
 def order_by(queryset, args):
-    u''' Использование: |order_by:"field1,-field2,other_class__field_name" '''
+    ''' Usage: |order_by:"field1,-field2,other_class__field_name" '''
     args = [x.strip() for x in args.split(',')]
     return queryset.order_by(*args)
