@@ -6,10 +6,10 @@ from django.conf import settings
 __all__ = ('AjaxDebug',)
 
 class AjaxDebug(object):
-    # Отключает кеширование в опере.
-    # Вынужденная мера для многоязычных сайтов,
-    # в которых при переключении языка не меняется урл.
-    
+    u"""
+        Сбрасывает содержимое последнего ajax-запроса в файл
+        /media/last_ajax_request.html
+    """
     def process_response(self, request, response):
         if settings.DEBUG and request.is_ajax():
             filename = os.path.join(settings.MEDIA_ROOT, 'last_ajax_request.html')
