@@ -45,6 +45,8 @@ def humanize(inp_str):
 
 DATE_INPUT_FORMATS = getattr(settings, "WYSIWYG_DATE_INPUT_FORMATS", None)
 DELETE_FILES = getattr(settings, "WYSIWYG_DELETE_FILES", False)
+TEXTAREAJS_PATH = getattr(settings, "WYSIWYG_TEXTAREAJS_PATH", "admin/js/textareas.js")
+TINYMCE_PATH = getattr(settings, "WYSIWYG_TINYMCE_PATH", "js/tiny_mce/tiny_mce.js")
 
 class WYSIWYGForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -64,12 +66,12 @@ class WYSIWYGForm(forms.ModelForm):
     
     class Media: 
         js = (
-            "js/tiny_mce/tiny_mce.js",
-            "admin/js/textareas.js",
+            TINYMCE_PATH,
+            TEXTAREAJS_PATH,
         )
         css = { 
             'all': (
-                "css/tinypatch.css", # tr.mceMenuItem td, tr.mceMenuItem th {line-height:normal;}
+                "css/tinypatch.css", # At least: tr.mceMenuItem td, tr.mceMenuItem th {line-height:normal;}
                 ), 
         }
 
