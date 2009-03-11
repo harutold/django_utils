@@ -67,6 +67,11 @@ class WYSIWYGForm(forms.ModelForm):
             "js/tiny_mce/tiny_mce.js",
             "admin/js/textareas.js",
         )
+        css = { 
+            'all': (
+                "css/tinypatch.css", # tr.mceMenuItem td, tr.mceMenuItem th {line-height:normal;}
+                ), 
+        }
 
 class AdminWYSIWYG(admin.ModelAdmin):
     form = WYSIWYGForm
