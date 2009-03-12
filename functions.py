@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import re
 from genshi.filters import HTMLSanitizer
 from genshi.input import HTML
 from django.core.urlresolvers import reverse as reverse_url
@@ -10,7 +11,7 @@ from django.http import HttpResponse
 from django.contrib.auth.models import User
 
 __all__ = ('clean_html', 'reverse', 'redirect', 'fallback_to', 'capitalize', 'notify', 'flatatt', 'filesize_generic',
-           'notify_admins')
+           'notify_admins', 'clean_tiny_mce_prefix')
 
 sanitizer = HTMLSanitizer(safe_attrs=HTMLSanitizer.SAFE_ATTRS|set(['style']))
 
@@ -65,3 +66,6 @@ def filesize_generic(fieldname):
 def notify_admins(msg):
     map(lambda x: x.message_set.create(message=msg),
         User.objects.filter(is_staff=True))
+
+def clean_tiny_mce_prefix(str):
+    return re.compile('''(<img[^>]+src\=["'])(.[\.\/]+)/media''').sub(r'\1/media', str)
