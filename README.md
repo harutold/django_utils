@@ -50,14 +50,41 @@ middleware
 #### django_utils.middleware.ProfileMiddleware
 subj
 
-Декораторы
+Decorators
 -----
 
 + json
++ csv_decor
 + render_to
 + allow_tags
 
-Другое
+Management
+-----
++ clearpyc
++ dumpdata_special
++ triggers (useless for our purposes?)
+
+Templatetags
+-----
+
+#### compare
++ ifin
+
+#### math
++ div
++ mult
++ num
++ rev
++ sub
+
+#### text
++ truncatesmart
++ truncatechars
+
+#### query_set
++ order_by
+
+Разное
 -----
 + fallback_to
 + flatatt
