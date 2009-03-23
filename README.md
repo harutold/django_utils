@@ -5,7 +5,6 @@ Description is only on Russian currently.
 
 email_auth_backend
 -----
-#### Usage:
 
     AUTHENTICATION_BACKENDS = ('django_utils.EmailBackend',)
 
@@ -14,15 +13,15 @@ email_auth_backend
 
 Визуальный редактор, смена форматов ввода даты
 
-#### Usage:
     from django_utils import WYSIWYGForm, AdminWYSIWYG
 
 #### settings:
 
-WYSIWYG_DELETE_FILES - добавление галочки для удаления файлов в FileField. Работает только для необязательных полей.
++ WYSIWYG_DELETE_FILES - добавление галочки для удаления файлов в FileField. Работает только для необязательных полей.
++ WYSIWYG_DATE_INPUT_FORMATS - подменяет форматввода даты во всех DateField (только ввода и только DateField)
 
-WYSIWYG_DATE_INPUT_FORMATS = ('%d/%m/%Y', '%d/%m/%y', '%Y-%m-%d',) - Подменяет форматввода даты во всех DateField (только ввода и только DateField)
-
+    WYSIWYG_DATE_INPUT_FORMATS  = ('%d/%m/%Y', '%d/%m/%y', '%Y-%m-%d',)
+    WYSIWYG_DELETE_FILES = True
 
 Функции обработки строк
 -----
@@ -39,15 +38,17 @@ middleware
 -----
 #### django_utils.middleware.ThreadLocals
 
-middleware.get_current_user
-middleware.get_request
-
-Возвращают текущего пользователя и реквест соответственно
-
-+ __middleware.NoCacheOpera__
++ middleware.get_current_user
++ middleware.get_request
 
 #### django_utils.middleware.NoCacheOpera
 Отключает кеширование в Опере, которая зачастую кеширует всё, что надо и не надо.
+
+#### django_utils.middleware.AjaxDebug
+Скидывает содержимое response AJAX-запросов в статичный файл в папке MEDIA_ROOT
+
+#### django_utils.middleware.ProfileMiddleware
+subj
 
 Декораторы
 -----
@@ -58,6 +59,7 @@ middleware.get_request
 
 Другое
 -----
-+ __fallback_to__
-+ __flatatt__
-+ __SFieldSet__
++ fallback_to
++ flatatt
++ SFieldSet
++ cache (likely, will be removed)
