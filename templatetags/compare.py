@@ -2,13 +2,12 @@
 # -*- coding: utf-8 -*-
 u"""FROM http://www.djangosnippets.org/snippets/177/ """
 
-from django import template
-from django.utils.encoding import force_unicode
 import re
 
+from django import template
+from django.utils.encoding import force_unicode
+
 register = template.Library()
-
-
     
 class IfInNode(template.Node):
     '''
@@ -34,6 +33,7 @@ class IfInNode(template.Node):
             return ""
 
 def ifin(parser, token, negate):
+    #TODO: docstring
     bits = token.contents.split()
     if len(bits) != 3:
         raise template.TemplateSyntaxError, "%r takes two arguments" % bits[0]
@@ -46,4 +46,13 @@ def ifin(parser, token, negate):
     else: nodelist_false = template.NodeList()
     return IfInNode(bits[1], bits[2], nodelist_true, nodelist_false, negate)
 
+@register.filter
+def equal_to(obj1, obj2):
+    """
+    Check if objects are equal.
+    """
+
+    return obj1 == obj2
+
 register.tag('ifin', lambda parser, token: ifin(parser, token, False))
+register.tag('ifnotin', lambda parser, token: ifin(parser, token, True))

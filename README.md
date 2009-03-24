@@ -57,6 +57,7 @@ Decorators
 + csv_decor
 + render_to
 + allow_tags
++ paged
 
 Management
 -----
@@ -69,6 +70,8 @@ Templatetags
 
 #### compare
 + ifin
++ ifnotin
++ equal_to
 
 #### math
 + div

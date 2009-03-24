@@ -7,7 +7,7 @@ import re
 
 register = template.Library()
 
-
+@register.filter
 def truncatechars(value, limit=20):
     """
      Обрезает строку до limit символов и добавляет троеточие в конце
@@ -23,7 +23,7 @@ def truncatechars(value, limit=20):
     value = value[:limit]
     return value + u'...'
 
-
+@register.filter
 def truncatesmart(value, limit=20):
     """
     Основано на http://www.djangosnippets.org/snippets/1259/
@@ -57,6 +57,3 @@ def truncatesmart(value, limit=20):
         return truncatechars(value, limit=limit)
     else:
         return u' '.join(words) + u'...'
-    
-register.filter('truncatesmart', truncatesmart)
-register.filter('truncatechars', truncatechars)
