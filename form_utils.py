@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__all__ = ('SFieldSet', 'humanize', 'WYSIWYGForm', 'AdminWYSIWYG')
+__all__ = ('SFieldSet', 'WYSIWYGForm', 'AdminWYSIWYG')
 
 from django import forms
 from django.conf import settings
