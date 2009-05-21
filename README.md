@@ -1,7 +1,7 @@
 django_utils
 ============
 Description is only on Russian currently.
-
+ 
 
 email_auth_backend
 -----
