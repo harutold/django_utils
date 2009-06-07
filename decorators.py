@@ -89,7 +89,7 @@ def paged(paged_list_name, per_page, per_page_var='per_page'):
                 page = 1
 
             try:
-                per_page = int(request.GET[per_page_var])
+                real_per_page = int(request.GET[per_page_var])
             except (ValueError, KeyError):
                 real_per_page = per_page
 
