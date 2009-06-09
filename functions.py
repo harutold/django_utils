@@ -11,7 +11,7 @@ from django.http import HttpResponse
 from django.contrib.auth.models import User
 
 __all__ = ('clean_html', 'reverse', 'redirect', 'fallback_to', 'capitalize', 'notify', 'flatatt', 'filesize_generic',
-           'notify_admins', 'clean_tiny_mce_prefix')
+           'notify_admins', 'clean_tiny_mce_prefix', 'hack_url_tag')
 
 sanitizer = HTMLSanitizer(safe_attrs=HTMLSanitizer.SAFE_ATTRS|set(['style']))
 
@@ -69,3 +69,21 @@ def notify_admins(msg):
 
 def clean_tiny_mce_prefix(str):
     return re.compile('''(<img[^>]+src\=["'])(.[\.\/]+)/media''').sub(r'\1/media', str)
+
+def hack_url_tag():
+    from localeurl.templatetags.localeurl_tags import chlocale
+    from django.template.defaulttags import URLNode
+    from django.utils import translation 
+    oldrender = URLNode.render
+    
+    def render(self, context):
+        parse = oldrender(self, context)
+        lang = translation.get_language()
+
+        if self.asvar:
+            context[self.asvar] = chlocale(context[self.asvar], lang)
+        else:
+            parse = chlocale(parse, lang)
+        return parse
+    
+        
