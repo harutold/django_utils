@@ -71,6 +71,8 @@ def clean_tiny_mce_prefix(str):
     return re.compile('''(<img[^>]+src\=["'])(.[\.\/]+)/media''').sub(r'\1/media', str)
 
 def hack_url_tag():
+    '''function to hack default url tag to be compatible with localeurl'''
+    
     from localeurl.templatetags.localeurl_tags import chlocale
     from django.template.defaulttags import URLNode
     from django.utils import translation 
