@@ -11,7 +11,7 @@ from django.http import HttpResponse
 from django.contrib.auth.models import User
 
 __all__ = ('clean_html', 'reverse', 'redirect', 'fallback_to', 'capitalize', 'notify', 'flatatt', 'filesize_generic',
-           'notify_admins', 'clean_tiny_mce_prefix', 'hack_url_tag')
+           'notify_admins', 'clean_tiny_mce_prefix')
 
 sanitizer = HTMLSanitizer(safe_attrs=HTMLSanitizer.SAFE_ATTRS|set(['style']))
 
