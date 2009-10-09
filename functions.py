@@ -55,11 +55,11 @@ def filesize_generic(fieldname):
         fsize = getattr(self, fieldname).size
         
         if fsize < 1024:
-            return str(fsize) + ' ' + 'bytes'
+            return str(fsize) + ' bytes'
         elif fsize < 1048576:
-            return str(fsize/1024) + ' ' + 'kB'
+            return str(fsize/1024) + ' kB'
         else:
-            return str(fsize/1048576) + ' ' + 'MB'
+            return str(fsize/1048576) + ' MB'
     filesize.short_description = u'размер файла'
     return filesize
 

@@ -14,6 +14,7 @@ import StringIO
 
 from django.conf import settings
 from django.db import connection
+from django.http import HttpResponse
 
 __all__ = ('ProfileMiddleware', )
 
@@ -38,13 +39,13 @@ class ProfileMiddleware(object):
     WARNING: It uses hotshot profiler which is not thread safe.
     """
     def process_request(self, request):
-        if (settings.DEBUG or request.user.is_superuser) and request.REQUEST.get('prof', None) is not None:
+        if (settings.DEBUG or request.user.is_superuser) and 'prof' in request.REQUEST:
             self.tmpfile = tempfile.mktemp()
             self.prof = hotshot.Profile(self.tmpfile)
             self.q_before = self.mysql_stat()
 
     def process_view(self, request, callback, callback_args, callback_kwargs):
-        if (settings.DEBUG or request.user.is_superuser) and request.REQUEST.get('prof', None) is not None:
+        if (settings.DEBUG or request.user.is_superuser) and 'prof' in request.REQUEST:
             return self.prof.runcall(callback, request, *callback_args, **callback_kwargs)
 
     def get_group(self, file):
@@ -94,7 +95,7 @@ class ProfileMiddleware(object):
                "</pre>"
 
     def process_response(self, request, response):
-        if (settings.DEBUG or request.user.is_superuser) and request.REQUEST.get('prof', None) is not None:
+        if (settings.DEBUG or request.user.is_superuser) and 'prof' in request.REQUEST:
             self.prof.close()
 
             out = StringIO.StringIO()
@@ -110,7 +111,8 @@ class ProfileMiddleware(object):
 
             self.q_all = self.mysql_stat() - self.q_before - 1
 
-            if response and response.content and stats_str:
+            response = HttpResponse()
+            if stats_str:
                 response.content = "<pre>" + stats_str + "</pre>"
 
             response.content = "\n".join(response.content.split("\n")[:40])

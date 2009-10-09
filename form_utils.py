@@ -58,3 +58,27 @@ class WYSIWYGForm(forms.ModelForm):
 
 class AdminWYSIWYG(admin.ModelAdmin):
     form = WYSIWYGForm
+
+    
+def show_all(instance, fields, *fieldnames):
+    u'''
+        Функция, скрывающая все варианты из Foreign Key-полей ModelForm,
+        за исключением текущего, если не задан GET-параметр show_all
+        
+        @param instance     Экземпляр объекта
+        @param fields       Атрибут fields объекта ModelForm
+        @param *fieldnames  Имена полей, которые следует скрыть
+    '''
+    # TODO: Приспособить для select multiple
+    request = get_request()
+    _show_all = 'show_all' in request.GET or request.method == 'POST'
+    if not _show_all:
+        for name in fieldnames:
+            fields[name].help_text = \
+                    u"Увидеть все варианты можно с помощью GET-параметра show_all"
+            rel = getattr(instance, name)
+            if hasattr(rel, 'pk'):
+                fields[name].queryset = fields[name].queryset.filter(pk=rel.pk)
+            elif not fields[name].required:
+                fields[name].queryset = fields[name].queryset.filter(pk=0)
+    return _show_all
