@@ -5,6 +5,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.forms import DateField
+from django_utils.middleware.threadlocals import get_request
 
 class SFieldSet:
     def __init__(self, field_sets):
@@ -69,16 +70,20 @@ def show_all(instance, fields, *fieldnames):
         @param fields       Атрибут fields объекта ModelForm
         @param *fieldnames  Имена полей, которые следует скрыть
     '''
-    # TODO: Приспособить для select multiple
     request = get_request()
     _show_all = 'show_all' in request.GET or request.method == 'POST'
     if not _show_all:
         for name in fieldnames:
-            fields[name].help_text = \
+            field = fields[name]
+            field.help_text = \
                     u"Увидеть все варианты можно с помощью GET-параметра show_all"
             rel = getattr(instance, name)
-            if hasattr(rel, 'pk'):
-                fields[name].queryset = fields[name].queryset.filter(pk=rel.pk)
-            elif not fields[name].required:
-                fields[name].queryset = fields[name].queryset.filter(pk=0)
+            if isinstance(field, forms.models.ModelMultipleChoiceField):
+                qs = rel.all()
+            elif hasattr(rel, 'pk'):
+                qs = field.queryset.filter(pk=rel.pk)
+            else:
+                qs = field.queryset.filter(pk=0)
+            if qs or not field.required:
+                field.queryset = qs
     return _show_all
