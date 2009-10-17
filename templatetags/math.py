@@ -29,6 +29,11 @@ def div(value, arg):
     return num(value) / num(arg)
 
 @register.filter
+def mod(value, arg):
+    "Returns remainder in division"
+    return num(value) % num(arg)
+
+@register.filter
 def rev(value):
     "Returns 1/x"
     try:
