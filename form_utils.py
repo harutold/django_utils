@@ -76,7 +76,7 @@ def show_all(instance, fields, *fieldnames):
         for name in fieldnames:
             field = fields[name]
             field.help_text = \
-                    u"Увидеть все варианты можно с помощью GET-параметра show_all"
+                    u"Увидеть все варианты можно с помощью GET-параметра <a href='.?show_all'>show_all</a>"
             rel = getattr(instance, name)
             if isinstance(field, forms.models.ModelMultipleChoiceField):
                 qs = rel.all()
