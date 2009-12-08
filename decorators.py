@@ -42,8 +42,9 @@ def json(func):
         
         if type(resp) is dict and 'request' in resp:
             del resp['request']
+        resp = HttpResponse(dumps(resp), mimetype='application/json')
         resp['cache-control'] = 'no-cache'
-        return HttpResponse(dumps(resp), mimetype='application/json')
+        return resp
             
     return simple_wrap(wrap, func)
 
