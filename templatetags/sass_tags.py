@@ -11,7 +11,6 @@ register = Library()
 
 @register.simple_tag
 def sass_to_string(arg):
-    import sass # Пока тут
     path = os.path.join(sass_path, arg)
     if not os.path.isfile(path):
         raise TemplateSyntaxError(u'Sass file %s does not exist' % path)
@@ -20,6 +19,7 @@ def sass_to_string(arg):
     f.close()
     
     try:
+        import sass # Пока тут
         css = sass.convert(content)
         css = u'<style>/*SASS file %s*/ \n %s</style>' % (arg, css)
     except:
