@@ -6,6 +6,7 @@ from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from django.utils.simplejson import dumps, loads
 from django.core.paginator import Paginator
+from .functions import paginate_queryset
 
 __all__ = ('render_to', 'json', 'allow_tags',  'csv_decor', 'paged')
 
@@ -85,23 +86,10 @@ def paged(paged_list_name, per_page, per_page_var='per_page'):
             result = func(request, *args, **kwargs)
             if not isinstance(result, dict):
                 return result
-            try:
-                page = int(request.GET.get('page', 1))
-            except (ValueError, KeyError):
-                page = 1
-
-            try:
-                real_per_page = int(request.GET[per_page_var])
-            except (ValueError, KeyError):
-                real_per_page = per_page
-
-            paginator = Paginator(result['paged_qs'], real_per_page)
-            result[paged_list_name] = paginator.page(page).object_list
-            result['page'] = page
-            result['page_list'] = range(1, paginator.num_pages + 1)
-            result['pages'] = paginator.num_pages
-            result['per_page'] = real_per_page
-            result['request'] = request
+            
+            queryset, result = paginate_queryset(request, result['paged_qs'],
+                        result=result, per_page_var=per_page_var, per_page=per_page)
+            result[paged_list_name] = queryset
             return result
         return wrapper
 

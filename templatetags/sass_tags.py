@@ -24,7 +24,7 @@ def sass_to_string(arg):
         css = u'<style>/*SASS file %s*/ \n %s</style>' % (arg, css)
     except:
         warn('unable to parse file %s' % arg)
-        css = os.system('sass %s %s.css' % (path, path))
+        os.system('sass %s %s.css' % (path, path))
         cssdir = os.path.join(sass_dir, arg)
         css = u'<link rel="stylesheet" href="/%s.css" type="text/css"></style>' % cssdir
     return css

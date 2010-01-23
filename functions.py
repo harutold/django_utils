@@ -9,6 +9,7 @@ from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 
 __all__ = ('clean_html', 'reverse', 'redirect', 'fallback_to', 'capitalize', 'notify', 'flatatt', 'filesize_generic',
            'notify_admins', 'clean_tiny_mce_prefix')
@@ -69,3 +70,58 @@ def notify_admins(msg):
 
 def clean_tiny_mce_prefix(str):
     return re.compile('''(<img[^>]+src\=["'])(.[\.\/]+)/media''').sub(r'\1/media', str)
+
+def paginate_queryset(request, queryset, result={}, per_page_var='per_page', per_page=20):
+    u'''
+        Paginates the queryset.
+        
+        Parses page from GET data.
+        Is used in `paged` decorator, can be used alone.
+    '''
+    try:
+        real_per_page = int(request.GET[per_page_var])
+    except (ValueError, KeyError):
+        real_per_page = per_page    
+    paginator = Paginator(queryset, real_per_page)
+    
+    try:
+        page = int(request.GET.get('page', 1))
+    except (ValueError, KeyError):
+        if page == 'last':
+            page = paginator.num_pages
+        else:
+            # Page is not 'last', nor can it be converted to an int.
+            raise Http404
+    try:
+        page_obj = paginator.page(page)
+    except InvalidPage:
+        raise Http404
+    queryset = page_obj.object_list
+
+    # Same template interface that in django generic views
+    result.update({
+        'paginator': paginator,
+        'page_obj': page_obj,
+
+        # Legacy template context stuff. New templates should use page_obj
+        # to access this instead.
+        #'is_paginated': page_obj.has_other_pages(),
+        #'results_per_page': paginator.per_page,
+        #'has_next': page_obj.has_next(),
+        #'has_previous': page_obj.has_previous(),
+        #'page': page_obj.number,
+        #'next': page_obj.next_page_number(),
+        #'previous': page_obj.previous_page_number(),
+        #'first_on_page': page_obj.start_index(),
+        #'last_on_page': page_obj.end_index(),
+        #'pages': paginator.num_pages,
+        #'hits': paginator.count,
+        #'page_range': paginator.page_range,
+    })
+
+    #result['page'] = page
+    #result['page_list'] = range(1, paginator.num_pages + 1)
+    #result['pages'] = paginator.num_pages
+    #result['per_page'] = real_per_page
+    #result['request'] = request
+    return queryset, result

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django import template
+from django_utils.middleware.threadlocals import get_request
 
 register = template.Library()
 
@@ -10,40 +11,32 @@ def pagination(context, adjacent_pages=5):
     """
     Return the list of A tags with links to pages.
     """
-
+    page_obj = context['page_obj']
+    paginator = context['paginator']
     page_list = range(
-        max(1,context['page'] - adjacent_pages),
-        min(context['pages'],context['page'] + adjacent_pages) + 1)
-    lower_page, higher_page = None, None
-
-    if not 1 == context['page']:
-        lower_page = context['page'] - 1
+        max(1, page_obj.number - adjacent_pages),
+        min(paginator.num_pages, page_obj.number + adjacent_pages) + 1)
 
     if not 1 in page_list:
         page_list.insert(0,1)
         if not 2 in page_list:
             page_list.insert(1,'.')
 
-    if not context['pages'] == context['page']:
-        higher_page = context['page'] + 1
-
-    if not context['pages'] in page_list:
-        if not context['pages'] - 1 in page_list:
+    if not paginator.num_pages in page_list:
+        if not paginator.num_pages - 1 in page_list:
             page_list.append('.')
-        page_list.append(context['pages'])
+        page_list.append(paginator.num_pages)
+        
+    request = context.get('request', None) or get_request()
     get_params = '&'.join(['%s=%s' % (x[0],','.join(x[1])) for x in
-        context['request'].GET.iteritems() if (not x[0] == 'page' and not x[0] == 'per_page')])
-    if get_params:
-        get_params = '?%s&' % get_params
-    else:
-        get_params = '?'
+        request.GET.iteritems() if (not x[0] == 'page' and not x[0] == 'per_page')])
+    get_params = '?%s&' % get_params if get_params else '?'
 
     return {
         'get_params': get_params,
-        'lower_page': lower_page,
-        'higher_page': higher_page,
-        'page': context['page'],
-        'pages': context['pages'],
+        'page_obj': context['page_obj'],
+        #'page': context['page'],
+        #'pages': context['pages'],
         'page_list': page_list,
-        'per_page': context['per_page'],
+        #'per_page': context['per_page'],
         }
