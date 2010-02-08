@@ -40,3 +40,7 @@ def rev(value):
         return 1.0 / num(value)
     except ZeroDivisionError:
         return None
+
+@register.filter
+def abs(value):
+    return abs(num(value))
