@@ -35,7 +35,7 @@ def sass_to_file(args):
         f.close()
     except:
         warn('unable to parse file %s' % arg)
-        p = Popen('sass --stdin %s' % csspath, shell=True, stdin=PIPE, stderr=PIPE, stdout=PIPE)
+        p = Popen('sass --stdin %s' % csspath, shell=True, stdin=PIPE, stdout=PIPE)
         p.communicate(content.encode('utf-8'))
     return u'<link rel="stylesheet" href="/%s" type="text/css"></style>' % cssfile
 
