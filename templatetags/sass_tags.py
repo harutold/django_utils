@@ -15,18 +15,18 @@ def sass_to_file(args):
     content, chunks = [], []
     for arg in args.split():
         chunks.append(arg.rsplit('.')[0])
-        path = os.path.join(sass_path, arg)
-        
-        if not os.path.isfile(path):
-            raise TemplateSyntaxError(u'Sass file %s does not exist' % path)
-        f = open(path)
-        content.append(f.read().decode('utf-8'))
-        f.close()
+        if settings.DEBUG:
+	    path = os.path.join(sass_path, arg)
+            if not os.path.isfile(path):
+                raise TemplateSyntaxError(u'Sass file %s does not exist' % path)
+            f = open(path)
+            content.append(f.read().decode('utf-8'))
+            f.close()
     output = '-'.join(chunks) + '.css'
-    content = u'\n'.join(content)
     cssfile = os.path.join(sass_dir, output)
-    csspath = os.path.join(sass_path, output)
     if settings.DEBUG:
+        content = u'\n'.join(content)
+	csspath = os.path.join(sass_path, output)
         try:
             import sass # Пока тут
             css = sass.convert(content)
