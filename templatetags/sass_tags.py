@@ -26,16 +26,16 @@ def sass_to_file(args):
     content = u'\n'.join(content)
     cssfile = os.path.join(sass_dir, output)
     csspath = os.path.join(sass_path, output)
-    
-    try:
-        import sass # Пока тут
-        css = sass.convert(content)
-        f = open(csspath, 'w')
-        f.write(css)
-        f.close()
-    except:
-        warn('unable to parse file %s' % arg)
-        p = Popen('sass --stdin %s' % csspath, shell=True, stdin=PIPE, stdout=PIPE)
-        p.communicate(content.encode('utf-8'))
+    if settings.DEBUG:
+        try:
+            import sass # Пока тут
+            css = sass.convert(content)
+            f = open(csspath, 'w')
+            f.write(css)
+            f.close()
+        except:
+            warn('unable to parse file %s' % arg)
+            p = Popen('sass --stdin %s' % csspath, shell=True, stdin=PIPE, stdout=PIPE)
+            p.communicate(content.encode('utf-8'))
     return u'<link rel="stylesheet" href="/%s" type="text/css"></style>' % cssfile
 
