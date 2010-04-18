@@ -4,7 +4,7 @@ import re
 from genshi.filters import HTMLSanitizer
 from genshi.input import HTML
 from django.core.urlresolvers import reverse as reverse_url
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, Http404
 from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
